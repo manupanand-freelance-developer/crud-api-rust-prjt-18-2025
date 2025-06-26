@@ -1,7 +1,7 @@
 use actix_web::{get, web, Responder, http::header, middleware::Logger, App, HttpResponse, HttpServer};
 use actix_cors::Cors;
 use dotenv::dotenv;
-
+use std::env;
 #[get("/health")]
 async fn health() -> HttpResponse {
     HttpResponse::Ok()
@@ -33,8 +33,12 @@ async fn main() -> std::io::Result<()> {
         std::env::set_var("RUST_LOG", "actix_web=info");
     }
     env_logger::init();
+    let port = env::var("PORT")
+    .unwrap_or_else(|_| "8080".to_string())
+    .parse::<u16>()
+    .expect("PORT must be a valid number");
 
-    println!("Starting server on http://127.0.0.1:8080...");
+    println!("Starting server on http://0.0.0.0:8080...");
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -55,7 +59,7 @@ async fn main() -> std::io::Result<()> {
             .service(health)      // ✅ register "/health"
             .service(test_route)  // ✅ register "/test/{param_value}"
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", port))?
     .run()
     .await
 }
